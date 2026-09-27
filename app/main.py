@@ -5,6 +5,19 @@ from app.rag_pipeline import get_rag_chain, answer_question
 from app.vector_store import get_retriever
 
 app = FastAPI(title="Pizza Restaurant Review RAG API")
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://rag-restrurant-frontend.vercel.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Global state (populated at startup)
 retriever = None
@@ -44,6 +57,14 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok", "ready": chain is not None}
+
+
+import pandas as pd
+
+@app.get("/reviews")
+def list_reviews():
+    df = pd.read_csv("./data/realistic_restaurant_reviews.csv")
+    return df.to_dict(orient="records")
 
 
 @app.post("/query", response_model=QueryResponse)
